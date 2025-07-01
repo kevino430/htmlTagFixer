@@ -1,0 +1,49 @@
+body {
+  margin: 0;
+  height: 100vh;
+  font-family: system-ui, -apple-system, "Segoe UI", Roboto, sans-serif;
+  overflow: hidden;
+}
+#editor-wrapper {
+  flex: 1 1 0;
+  min-width: 0;
+}
+.CodeMirror {
+  height: 100%;
+  max-width: 100%;
+  word-break: break-word;
+}
+#sidebar {
+  max-height: 100vh;
+  overflow-y: auto;
+}
+#errors {
+  font-family: ui-monospace, Consolas, "Liberation Mono", Menlo, monospace;
+}
+.error {
+  color: #d6336c;
+  cursor: pointer;
+  margin-bottom: 0.4rem;
+  font-size: 0.875rem;
+}
+.btn-icon {
+  display: flex;
+  align-items: center;
+  gap: 0.35rem;
+}
+/* Toast */
+.toast-container {
+  position: fixed;
+  top: 1rem;
+  right: 1rem;
+  z-index: 1080;
+}
+.CodeMirror .fixed-line-highlight {
+  background-color: rgba(105, 204, 13, 0.4); /* 淡綠*/
+  transition: background-color 0.3s ease;
+}
+
+.CodeMirror .custom-selected-line {
+  background-color: rgba(255, 60, 0, 0.6); /* 你想要的顏色 */
+  border-left: 3px solid rgb(255, 0, 234); /* 顯眼一點 */
+}
