@@ -362,121 +362,137 @@ function analyze() {
 function fixLine(line, rawEncoded, type) {
   const raw = decodeURIComponent(rawEncoded);
   const doc = editor.getDoc();
-  const text = doc.getLine(line);
   const total = doc.lineCount();
+  const text = doc.getLine(line);
+  let modified = false;
 
-  let modified = false; // 標記是否有做修改
+  /* ---------- 小工具 ---------- */
+  const indentOf = (s) => (/^\s*/.exec(s) || [""])[0];
+  const findLine = (regex, from = 0) => {
+    for (let i = from; i < total; i++) if (regex.test(doc.getLine(i))) return i;
+    return -1;
+  };
 
-  // 0) non-unclosed => remove raw
+  /* ---------- 0) 先自動補 </head>（若缺） ---------- */
+  const headOpen = findLine(/<\s*head\b/i);
+  if (headOpen > -1 && findLine(/<\s*\/head\b/i) === -1) {
+    const bodyIdx = findLine(/<\s*body\b/i, headOpen + 1);
+    if (bodyIdx > -1) {
+      doc.replaceRange("\n</head>", { line: bodyIdx, ch: 0 });
+      modified = true;
+    }
+  }
+
+  /* ---------- 1) 若非 unclosed，就單純刪 raw ---------- */
   if (type !== "unclosed") {
     const replaced = text.replace(raw, "");
     doc.replaceRange(replaced, { line, ch: 0 }, { line, ch: text.length });
     modified = true;
   } else {
-    // 1) get tag
-    const match = /<\s*([a-zA-Z0-9]+)/.exec(text);
-    const tag = match && match[1].toLowerCase();
+    /* ---------- 2) 分析 tag ---------- */
+    const m = /<\s*([a-z0-9]+)/i.exec(text);
+    const tag = m ? m[1].toLowerCase() : null;
     if (!tag) return;
 
-    // 2) script/style special handling
+    /* === 2-a) <script>/<style> 特殊處理 === */
     if (tag === "script" || tag === "style") {
+      // 已經補過就跳過
       if (text.includes(`</${tag}>`)) return;
 
-      let hasClose = false;
-      for (let i = line + 1; i < total; i++) {
-        if (doc.getLine(i).includes(`</${tag}>`)) {
-          hasClose = true;
-          break;
-        }
-      }
-      if (hasClose) return;
+      // 之後行若已經有關閉標籤也跳過
+      if (findLine(new RegExp(`<\\s*\\/\\s*${tag}\\b`, "i"), line + 1) > -1)
+        return;
 
-      let insertAt = total;
+      /* -- style: 找最後一個 } → 在下一行補 </style> -- */
       if (tag === "style") {
-        for (let i = line + 1; i < total; i++) {
-          if (/^\s*<\/head\s*>/i.test(doc.getLine(i))) {
-            insertAt = i;
-            break;
-          }
-        }
-        if (insertAt === total) {
-          for (let i = line + 1; i < total; i++) {
-            if (/^\s*<\/body\s*>/i.test(doc.getLine(i))) {
-              insertAt = i;
-              break;
-            }
-          }
-        }
-      } else {
-        for (let i = line + 1; i < total; i++) {
-          if (/^\s*<\/body\s*>/i.test(doc.getLine(i))) {
-            insertAt = i;
-            break;
-          }
-        }
-      }
-
-      const indent = (/^\s*/.exec(text) || [""])[0];
-      doc.replaceRange(`\n${indent}</${tag}>`, { line: insertAt, ch: 0 });
-      modified = true;
-    } else {
-      // 3) inline tags
-      const INLINE = new Set([
-        "p",
-        "span",
-        "a",
-        "strong",
-        "li",
-        "dt",
-        "dd",
-        "td",
-        "th",
-        "option",
-        "h1",
-        "h2",
-        "h3",
-        "h4",
-        "h5",
-        "h6",
-      ]);
-      if (INLINE.has(tag) && !text.includes(`</${tag}>`)) {
-        doc.replaceRange(
-          text + `</${tag}>`,
-          { line, ch: 0 },
-          { line, ch: text.length }
-        );
-        modified = true;
-      } else {
-        // 4) block tags: find </body> or </html>
-        let insertLine = total;
+        let insertAt = line + 1,
+          lastBrace = -1;
         for (let i = line + 1; i < total; i++) {
           const l = doc.getLine(i);
-          if (new RegExp(`^\\s*<\\/${tag}[\\s>]`, "i").test(l)) return;
-          if (/^\s*<\/body[\s>]/i.test(l)) {
-            insertLine = i;
+          if (/^\s*<\/(head|body|html)\b/i.test(l) || /^\s*</.test(l)) {
+            insertAt = lastBrace > -1 ? lastBrace + 1 : i;
             break;
           }
-          if (/^\s*<\/html[\s>]/i.test(l)) insertLine = i;
+          if (l.trim().endsWith("}")) lastBrace = i;
         }
-        const indent = (/^\s*/.exec(text) || [""])[0];
-        doc.replaceRange(`\n${indent}</${tag}>`, { line: insertLine, ch: 0 });
+        doc.replaceRange(`\n${indentOf(text)}</style>`, {
+          line: insertAt,
+          ch: 0,
+        });
+        modified = true;
+      } else {
+        /* -- script: 找 </body> 之前 -- */
+        const insertAt =
+          findLine(/<\s*\/body\b/i, line + 1) > -1
+            ? findLine(/<\s*\/body\b/i, line + 1)
+            : total;
+        doc.replaceRange(`\n${indentOf(text)}</script>`, {
+          line: insertAt,
+          ch: 0,
+        });
+        modified = true;
+      }
+      return; // 已處理完 script/style
+    }
+
+    /* === 2-b) 其他標籤 === */
+    const INLINE = new Set([
+      "p",
+      "span",
+      "a",
+      "strong",
+      "li",
+      "dt",
+      "dd",
+      "td",
+      "th",
+      "option",
+      "h1",
+      "h2",
+      "h3",
+      "h4",
+      "h5",
+      "h6",
+    ]);
+
+    // inline：直接補在同一行尾
+    if (INLINE.has(tag) && !text.includes(`</${tag}>`)) {
+      doc.replaceRange(
+        text + `</${tag}>`,
+        { line, ch: 0 },
+        { line, ch: text.length }
+      );
+      modified = true;
+    } else {
+      // block：補在 </body> 或 </html> 前
+      let insertLine = findLine(/<\s*\/body\b/i, line + 1);
+      if (insertLine === -1) insertLine = findLine(/<\s*\/html\b/i, line + 1);
+      if (insertLine === -1) insertLine = total;
+
+      // 若後方已經有閉合同名 tag，就不處理
+      if (findLine(new RegExp(`<\\s*\\/\\s*${tag}\\b`, "i"), line + 1) === -1) {
+        doc.replaceRange(`\n${indentOf(text)}</${tag}>`, {
+          line: insertLine,
+          ch: 0,
+        });
         modified = true;
       }
     }
   }
 
-  // === Highlight fixed line ===
+  /* ---------- 3) 視覺高亮 ---------- */
   if (modified) {
-    const from = { line, ch: 0 };
-    const to = { line, ch: doc.getLine(line).length };
-    editor.focus();
-    doc.setSelection(from, to);
-    const marker = editor.markText(from, to, {
-      className: "fixed-line-highlight",
-    });
+    const end = doc.getLine(line).length;
+    doc.setSelection({ line, ch: 0 }, { line, ch: end });
+    const marker = doc.markText(
+      { line, ch: 0 },
+      { line, ch: end },
+      { className: "fixed-line-highlight" }
+    );
     setTimeout(() => marker.clear(), 2000);
   }
 }
+
 /* ---------- 一鍵「修結構＋分析」 ---------- */
 function analyzeWithFix() {
   finalizeDocumentStructure();
