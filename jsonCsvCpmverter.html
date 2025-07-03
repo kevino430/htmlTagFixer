@@ -1,0 +1,190 @@
+<!DOCTYPE html>
+<html lang="zh-TW">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>JSON ⇄ CSV 轉換工具</title>
+    <link
+      href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/css/bootstrap.min.css"
+      rel="stylesheet"
+    />
+    <style>
+      textarea {
+        width: 100%;
+        height: 300px;
+        font-family: monospace;
+        white-space: pre;
+      }
+    </style>
+  </head>
+  <body class="bg-dark text-white">
+    <div class="container py-4">
+      <h2 class="mb-4 text-center">JSON ⇄ CSV 轉換工具</h2>
+      <div class="row g-3">
+        <div class="col-md-6">
+          <label for="jsonInput" class="form-label">JSON 輸入</label>
+          <textarea
+            id="jsonInput"
+            class="form-control bg-black text-white"
+            placeholder='請輸入 JSON，例如：[{"name": "John", "age": 30}]'
+          ></textarea>
+          <div class="mt-2 d-flex gap-2">
+            <button class="btn btn-primary" onclick="jsonToCsv()">
+              轉換為 CSV →
+            </button>
+            <button class="btn btn-secondary" onclick="clearInput('jsonInput')">
+              清空
+            </button>
+            <button
+              class="btn btn-outline-light"
+              onclick="copyText('jsonInput')"
+            >
+              複製
+            </button>
+            <button
+              class="btn btn-warning"
+              onclick="exportFile('jsonInput', 'output.json')"
+            >
+              匯出 JSON
+            </button>
+          </div>
+        </div>
+
+        <div class="col-md-6">
+          <label for="csvOutput" class="form-label">CSV 輸入</label>
+          <textarea
+            id="csvOutput"
+            class="form-control bg-black text-white"
+            placeholder="請輸入 CSV，例如：\nname,age\nJohn,30"
+          ></textarea>
+          <div class="mt-2 d-flex gap-2">
+            <button class="btn btn-success" onclick="csvToJson()">
+              ← 轉換為 JSON
+            </button>
+            <button class="btn btn-secondary" onclick="clearInput('csvOutput')">
+              清空
+            </button>
+            <button
+              class="btn btn-outline-light"
+              onclick="copyText('csvOutput')"
+            >
+              複製
+            </button>
+            <button
+              class="btn btn-warning"
+              onclick="exportFile('csvOutput', 'output.csv')"
+            >
+              匯出 CSV
+            </button>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <script>
+      function flatten(obj, prefix = "", res = {}) {
+        for (let key in obj) {
+          const val = obj[key];
+          const newKey = prefix ? `${prefix}.${key}` : key;
+          if (typeof val === "object" && val !== null && !Array.isArray(val)) {
+            flatten(val, newKey, res);
+          } else {
+            res[newKey] = val;
+          }
+        }
+        return res;
+      }
+
+      function unflatten(obj) {
+        const result = {};
+        for (const flatKey in obj) {
+          const keys = flatKey.split(".");
+          keys.reduce((acc, key, i) => {
+            return (acc[key] =
+              i === keys.length - 1 ? obj[flatKey] : acc[key] || {});
+          }, result);
+        }
+        return result;
+      }
+
+      function jsonToCsv() {
+        try {
+          const input = document.getElementById("jsonInput").value.trim();
+          let json = JSON.parse(input);
+
+          if (!Array.isArray(json)) {
+            json = Object.entries(json).map(([key, value]) => ({ key, value }));
+          }
+
+          // 展平
+          const flatArray = json.map((item) => flatten(item));
+
+          // 收集所有欄位名
+          const headers = Array.from(
+            new Set(flatArray.flatMap((obj) => Object.keys(obj)))
+          );
+
+          // 每筆資料轉成 CSV 列
+          const rows = flatArray.map((obj) =>
+            headers.map((h) => JSON.stringify(obj[h] ?? ""))
+          );
+
+          // 組合成 CSV 字串
+          const csv = [headers.join(","), ...rows.map((r) => r.join(","))].join(
+            "\n"
+          );
+
+          document.getElementById("csvOutput").value = csv;
+        } catch (e) {
+          alert("⚠️ JSON → CSV 轉換失敗：" + e.message);
+        }
+      }
+
+      function csvToJson() {
+        try {
+          const input = document.getElementById("csvOutput").value.trim();
+          const lines = input.split("\n");
+          const headers = lines[0].split(",");
+
+          const json = lines.slice(1).map((line) => {
+            const values = line.split(",");
+            const flatObj = {};
+            headers.forEach((h, i) => {
+              flatObj[h] = JSON.parse(values[i] || '""');
+            });
+            return unflatten(flatObj);
+          });
+
+          document.getElementById("jsonInput").value = JSON.stringify(
+            json,
+            null,
+            2
+          );
+        } catch (e) {
+          alert("⚠️ CSV → JSON 轉換失敗：" + e.message);
+        }
+      }
+
+      function clearInput(id) {
+        document.getElementById(id).value = "";
+      }
+
+      function copyText(id) {
+        const textarea = document.getElementById(id);
+        textarea.select();
+        document.execCommand("copy");
+      }
+
+      function exportFile(textareaId, filename) {
+        const text = document.getElementById(textareaId).value;
+        const blob = new Blob([text], { type: "text/plain;charset=utf-8" });
+        const link = document.createElement("a");
+        link.href = URL.createObjectURL(blob);
+        link.download = filename;
+        document.body.appendChild(link);
+        link.click();
+        document.body.removeChild(link);
+      }
+    </script>
+  </body>
+</html>
