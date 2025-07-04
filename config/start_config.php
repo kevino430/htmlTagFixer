@@ -20,7 +20,11 @@ if (in_array($HTTP_HOST, array('localhost', '127.0.0.1'))) {
 	$dbpasswd = '';
 	
 } else if ($HTTP_HOST == 'bill.ibizamedia.co') {
-
+	$dbhost	= '104.199.134.78';
+	$dbuser	= 'bill';
+	$dbport	= '3306';
+	$dbname	= 'video_service';
+	$dbpasswd = 'SLj8J7#qbPk7MHFd';
 }
 
 
