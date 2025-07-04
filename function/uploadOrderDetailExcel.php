@@ -1,6 +1,8 @@
 <?php
-$dir = '../';
-require $dir.'vendor/autoload.php';
+$DIR_PATH  = '../';
+include $DIR_PATH .'common/common.php';
+require $DIR_PATH.'vendor/autoload.php';
+
 use PhpOffice\PhpSpreadsheet\IOFactory;
 
 if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_FILES['excel_file'])) {

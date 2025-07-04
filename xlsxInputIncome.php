@@ -1,3 +1,13 @@
+<?php 
+$DIR_PATH  = '';
+include $DIR_PATH .'common/common.php';
+
+$sql = "SELECT * FROM `shopee_income` WHERE 1=1 LIMIT 1";
+$general_setting = $system->fetch_arrr($sql);
+
+
+
+?>
 <!DOCTYPE html>
 <html lang="zh-TW">
 <head>
