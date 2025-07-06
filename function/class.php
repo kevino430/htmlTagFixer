@@ -47,13 +47,8 @@ class Linky_system
 			);
 
 			// ④ 設定 sql_mode（可合併一次執行）
-			$this->db->exec("
-						SET NAMES utf8mb4,
-							SESSION sql_mode =
-							'NO_ZERO_IN_DATE,NO_ZERO_DATE,
-							ERROR_FOR_DIVISION_BY_ZERO,
-							NO_ENGINE_SUBSTITUTION'
-					");
+			$this->db->exec("SET NAMES utf8mb4");
+			$this->db->exec("SET SESSION sql_mode='STRICT_TRANS_TABLES,NO_ENGINE_SUBSTITUTION'");
 
 			// ⑤ 以下原本程式碼…
 			if ($this->session_id == 0 && !empty($_COOKIE[$this->cookies_name])) {
