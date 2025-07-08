@@ -17,7 +17,7 @@ if (in_array($HTTP_HOST, array('localhost', '127.0.0.1'))) {
 	$dbuser	= 'root';
 	$dbport	= '3307';
 	$dbname	= 'shopi_test';
-	$dbpasswd = 'Pass';
+	$dbpasswd = '';
 	
 }
 
