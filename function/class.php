@@ -32,28 +32,29 @@ class Linky_system
 	public function __construct($DIR_PATH, $order)
 	{
 		try {
-			// ① 讀取設定檔
-			require $DIR_PATH . 'config/start_config.php';
+			include($DIR_PATH . 'config/start_config.php');
+			$this->db			= new PDO("mysql:host=$dbhost;port=$dbport;dbname=$dbname;", $dbuser, $dbpasswd, array(PDO::MYSQL_ATTR_INIT_COMMAND => "SET NAMES utf8"));
+			/*
+			$better_sql_defaults	= array("set SESSION sql_mode ='NO_ZERO_IN_DATE,NO_ZERO_DATE,ERROR_FOR_DIVISION_BY_ZERO,NO_AUTO_CREATE_USER,NO_ENGINE_SUBSTITUTION'");
+			*/
+			// remove NO_AUTO_CREATE_USER
+			$better_sql_defaults	= array("set SESSION sql_mode ='NO_ZERO_IN_DATE,NO_ZERO_DATE,ERROR_FOR_DIVISION_BY_ZERO,NO_ENGINE_SUBSTITUTION'");
 
-			// ② 建 DSN，順便補 charset（建議 utf8mb4）
-			$dsn = "mysql:host={$dbhost};port={$dbport};dbname={$dbname};charset=utf8mb4";
+			$this->db->setAttribute(PDO::ATTR_ERRMODE, PDO::ERRMODE_EXCEPTION);
+			foreach ($better_sql_defaults as $sql) {
+				$this->db->query($sql);
+			}
 
-			// ③ 建立 PDO
-			$this->db = new PDO(
-				$dsn,
-				$dbuser,
-				$dbpasswd,
-				[PDO::ATTR_ERRMODE => PDO::ERRMODE_EXCEPTION]
-			);
+			// 登入狀態 有可能出錯
 
-			// ④ 設定 sql_mode（可合併一次執行）
-			$this->db->exec("SET NAMES utf8mb4");
-			$this->db->exec("SET SESSION sql_mode='STRICT_TRANS_TABLES,NO_ENGINE_SUBSTITUTION'");
-
-			// ⑤ 以下原本程式碼…
-			if ($this->session_id == 0 && !empty($_COOKIE[$this->cookies_name])) {
-				$this->get_login_status();
-				$this->update_user_account();
+			if ($this->session_id == 0) {
+				if ($_COOKIE && isset($_COOKIE[$this->cookies_name]) && trim($_COOKIE[$this->cookies_name])) {
+					$_user_cookie = trim($_COOKIE[$this->cookies_name]);
+					if ($_user_cookie) {
+						$this->get_login_status();
+						$this->update_user_account();
+					}
+				}
 			}
 		} catch (PDOException $e) {
 			$_xml		= '';
@@ -64,7 +65,7 @@ class Linky_system
 			$_xml		.= '<order>' . $e . '</order>';
 			$_xml		.= '<' . $order . '>';
 			$_xml		.= '<statusCode>E002</statusCode>';
-			$_xml		.= '<message> SYSTEM ERROR</message>';
+			$_xml		.= '<message>' . urlencode('系統異常') . '</message>';
 			$_xml		.= '</' . $order . '>';
 			$_xml_end	= '</LinkyCRM>';
 			header('Content-Type: text/xml');
@@ -651,8 +652,9 @@ class Linky_system
 		}
 
 		return array(
-			'successRecordArray' => $successRecordArray,
+			'successRecordArray' => $successRecordArray, 
 			'cancleRecordArray' => $cancleRecordArray
 		);
+	
 	}
 }

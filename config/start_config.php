@@ -12,13 +12,42 @@ $SHELL		= isset($_SERVER['SHELL']) ? $_SERVER['SHELL'] : ''; //20200715-支援li
 
 
 if (in_array($HTTP_HOST, array('localhost', '127.0.0.1'))) {
+	// $dbhost	= '127.0.0.1';
+	// $dbuser	= 'root';
+	// $dbport	= '3307';
+	// $dbname	= 'video_service_dev';
+	// $dbpasswd = '';
 
-	$dbhost	= '127.0.0.1';
-	$dbuser	= 'root';
-	$dbport	= '3307';
-	$dbname	= 'shopi_test';
-	$dbpasswd = '';
+	$dbhost	= '104.199.134.78';
+	$dbuser	= 'bill';
+	$dbport	= '3306';
+	$dbname	= 'video_service';
+	$dbpasswd = 'SLj8J7#qbPk7MHFd';
 	
+} else if ($HTTP_HOST == 'bill.ibizamedia.co') {
+	$dbhost	= '104.199.134.78';
+	$dbuser	= 'bill';
+	$dbport	= '3306';
+	$dbname	= 'video_service';
+	$dbpasswd = 'SLj8J7#qbPk7MHFd';
 }
 
+// pre($dbhost);
+// pre($dbuser);
+// pre($dbport);
+// pre($dbname);
+// pre($dbpasswd);
+// exit;
 
+// else{
+// 	// $dbhost	='127.0.0.1';
+// 	// $dbuser	='root';
+// 	// $dbport	='3306';
+// 	// $dbname	='hicpap_linky';
+// 	// $dbpasswd='';
+// 	$dbhost	='127.0.0.1';                                                                                                                //之資料夾下方,所以需要判斷三個
+// 	$dbuser	='hicpap_linky';
+// 	$dbport	='3306';
+// 	$dbname	='hicpap_linky';
+// 	$dbpasswd="N@qtmzXb5bKRjeX$";
+// }

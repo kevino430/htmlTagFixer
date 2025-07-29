@@ -1,9 +1,9 @@
 <?php 
 $DIR_PATH  = '';
-include $DIR_PATH .'common/common.php';
+// include $DIR_PATH .'common/common.php';
 
-$sql = "SELECT * FROM `shopee_income` WHERE 1=1 LIMIT 1";
-$general_setting = $system->fetch_arrr($sql);
+// $sql = "SELECT * FROM `shopee_income` WHERE 1=1 LIMIT 1";
+// $general_setting = $system->fetch_arrr($sql);
 
 
 
@@ -40,6 +40,7 @@ $general_setting = $system->fetch_arrr($sql);
 <body class="bg-light">
   <div class="container py-5">
     <h2 class="mb-4">上傳 Excel（Income 分頁）</h2>
+    
     <form id="uploadFormOne" enctype="multipart/form-data">
       <div class="mb-3">
         <input type="file" name="excel_file" class="form-control" accept=".xlsx" required />
