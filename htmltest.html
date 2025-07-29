@@ -22,11 +22,7 @@
     />
 
     <!-- Custom Styles css html-tag-fixer.css -->
-    <link
-      href="css/html-tag-fixer.css"
-      rel="stylesheet"
-        />
-
+    <link href="css/html-tag-fixer.css" rel="stylesheet" />
   </head>
 
   <body class="d-flex flex-column flex-md-row">
@@ -43,6 +39,10 @@
       <div class="d-grid gap-2">
         <button id="analyze-btn" class="btn btn-primary btn-icon">
           <i class="fa-solid fa-screwdriver-wrench"></i> 修結構＋分析
+        </button>
+
+        <button class="btn btn-primary btn-icon" onclick="formatWithPrettier()">
+          <i class="fa-solid fa-wand-magic-sparkles"></i> 格式化 HTML
         </button>
 
         <button class="btn btn-success btn-icon" onclick="downloadHTML()">
@@ -87,8 +87,12 @@
     <script src="https://cdnjs.cloudflare.com/ajax/libs/codemirror/5.65.13/mode/htmlmixed/htmlmixed.min.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
 
+    <!-- 加在 htmlNew.html 中 -->
+    <script src="https://unpkg.com/prettier@3.2.5/standalone.js"></script>
+    <script src="https://unpkg.com/prettier@3.2.5/parser-html.js"></script>
+
     <!-- Core Logic -->
     <!-- html-tag-fixer.js -->
-    <script src="js/html-tag-fixer.js"></script>
+    <script src="js/html-tag-fixer.js?version=2.0"></script>
   </body>
 </html>

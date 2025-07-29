@@ -493,9 +493,26 @@ function fixLine(line, rawEncoded, type) {
   }
 }
 
+// ★★ 1) async 版 formatter
+async function formatWithPrettier() {
+  try {
+    const formatted = await prettier.format(editor.getValue(), {
+      parser: "html",
+      plugins: window.prettierPlugins,
+      tabWidth: 2,
+      useTabs: false,
+    });
+    editor.setValue(formatted);
+  } catch (err) {
+    console.error("Prettier 格式化失敗：", err);
+    alert("格式化失敗：" + err.message);
+  }
+}
+
 /* ---------- 一鍵「修結構＋分析」 ---------- */
-function analyzeWithFix() {
+async function analyzeWithFix() {
   finalizeDocumentStructure();
+  // await formatWithPrettier();      // 再跑 Prettier
   analyze();
 }
 document
